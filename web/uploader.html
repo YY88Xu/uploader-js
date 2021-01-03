@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .upload {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .wrap {
+            width: 302px;
+            height: 6px;
+            border-radius: 100px;
+            background-color: #ebeef5;
+            position: relative;
+            margin-right: 10px;
+        }
+
+        .inner {
+            background-color: #409eff;
+            width: 0;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 100px;
+            transition: width 0.2s linear;
+        }
+
+        #uploader {
+            display: none;
+        }
+
+        .btn-upload {
+            color: #fff;
+            background-color: #409eff;
+            border: 1px solid  #409eff;
+            padding: 9px 15px;
+            font-size: 12px;
+            border-radius: 3px;
+            display: inline-block;
+            text-align: center;
+            cursor: pointer;
+            outline: none;
+        }
+        .add-wrap{
+            margin-top: 300px;
+            margin-left: 100px;
+        }
+        .upload{
+            margin-left: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="add-wrap">
+        <button class="btn-upload">点击上传</button>
+        <input type="file" id="uploader">
+    </div>
+
+    <div class="upload">
+        <div class="wrap">
+            <div class="inner"></div>
+        </div>
+        <span id="percent">0%</span>
+    </div>
+
+    <script>
+        document.querySelector('.btn-upload').addEventListener('click', function(){
+            document.getElementById('uploader').click();
+        });
+        document.getElementById('uploader').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            postFile("http://localhost:8081/upload/", formData).then(res => {
+                console.log(res);
+            }).catch(error=>{
+                console.log("error: "+error);
+            })
+        });
+
+        function postFile(url, data) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.onload = function () {
+                    if(xhr.status<200||xhr.status>=300){
+                        reject(xhr.status);
+                    }
+                    resolve(xhr.response);
+                }
+                xhr.onerror = function (e) {
+                    reject(e);
+                }
+                if (xhr.upload) {
+                    xhr.upload.onprogress = function progress(e) {
+                        if (e.total > 0) {
+                            const percent = (e.loaded / e.total) * 100;
+                            e.percent = percent;
+                            const inner = document.querySelector('.inner');
+                            inner.style.width = `${percent}%`
+                            const spanP = document.querySelector('#percent');
+                            spanP.innerHTML = percent.toFixed(0) + '%';
+                        }
+                    };
+                }
+                
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Test', 'CORS');
+                xhr.send(data);
+            })
+        }
+    </script>
+</body>
+
+</html>
